@@ -7,25 +7,20 @@ import unittest
 from io import StringIO
 from unittest.ock import patch
 from console import HBNBCommand
-from colorama import Fore, Style
 from models import storage
-from unittest_prettify.colorize import (
-        BLUE,
-        MAGENTA,
-        colorize,
-        GREEN,
-        RED
-)
+
 import os
 
-@colorize(color=MAGENTA)
+
 class ConsolePromtingTest(unittest.TestCase):
 
     def testPrompt(self):
         """
             Prompt command
         """
-        self.assertEqual(HBNBCommand().prompt, f"{Fore.BLUE}(hbnb){Style.RESET_ALL} ")
+        self.assertEqual(HBNBCommand().prompt,
+                         "(hbnb) ")
+
     def testEmptyLine(self):
         """
             Empty line
@@ -34,7 +29,7 @@ class ConsolePromtingTest(unittest.TestCase):
             HBNBCommand().onecmd("")
             self.assertEqual(output.getvalue().strip(), "")
 
-@colorize(color=GREEN)
+
 class ConsoleHelpTest(unittest.TestCase):
     def testHelpCreate(self):
         """
@@ -89,12 +84,22 @@ an instance based on the class name and id.\n\n")
 
     def testHelpQuit(self):
         """
-            show() method have help documented
+            quit() method have help documented
         """
         with patch('sys.stdout', new=StringIO()) as output:
             HBNBCommand().onecmd("help quit")
             self.assertGreater(len(output.getvalue()), 0)
             self.assertEqual(output.getvalue(), "Quit command to exit the program\n\n")
+
+    def testHelpEOF(self):
+        """
+            EOF command have help documented
+        """
+        with patch('sys.stdout', new=StringIO()) as output:
+            HBNBCommand().onecmd("help EOF")
+            self.assertGreater(len(output.getvalue()), 0)
+            self.assertEqual(output.getvalue(),
+                             "EOF command to exit the program\n\n")
 
     def testHelpCount(self):
         """
@@ -107,7 +112,6 @@ an instance based on the class name and id.\n\n")
 (console.py) to retrieve the number of instances of a class.\
 \n\n")
 
-@colorize(color=BLUE)
 class ConsoleExitTest(unittest.TestCase):
 
     def testDoQuit(self):
@@ -124,10 +128,9 @@ class ConsoleExitTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             HBNBCommand().onecmd("EOF")
 
-@colorize(color=BLUE)
 class ConsoleAllTest(unittest.TestCase):
 
-    classmethod
+    @classmethod
     def setUp(self):
         try:
             os.rename("file.json", "tmp")
@@ -146,8 +149,7 @@ class ConsoleAllTest(unittest.TestCase):
         except IOError:
             pass
 
-    @colorize(color=RED)
-    def testAllInvalidClass(self):
+def testAllInvalidClass(self):
         """
             all invalid class
         """
@@ -193,7 +195,8 @@ class ConsoleAllTest(unittest.TestCase):
 
     def __allInstanceSpaceNotation(self, prmClassName, prmOtherClassName):
         with patch("sys.stdout", new=StringIO()) as output:
-            self.assertFalse(HBNBCommand().onecmd("create {}".format(prmClassName)))
+            self.assertFalse(HBNBCommand().onecmd(
+                "create {}".format(prmClassName)))
         with patch("sys.stdout", new=StringIO()) as output:
             command = "all {}".format(prmClassName)
             self.assertFalse(HBNBCommand().onecmd(command))
@@ -202,17 +205,20 @@ class ConsoleAllTest(unittest.TestCase):
 
     def __allInstanceDotNotation(self, prmClassName, prmOtherClassName):
         with patch("sys.stdout", new=StringIO()) as output:
-            self.assertFalse(HBNBCommand().onecmd("create {}".format(prmClassName)))
+           self.assertFalse(HBNBCommand().onecmd(
+                "create {}".format(prmClassName)))
         with patch("sys.stdout", new=StringIO()) as output:
             command = "{}.all()".format(prmClassName)
             self.assertFalse(HBNBCommand().onecmd(command))
             self.assertIn(prmClassName, output.getvalue().strip())
             self.assertNotIn(prmOtherClassName, output.getvalue().strip())
 
-@colorize(color=BLUE)
 class ConsoleCountTest(unittest.TestCase):
+    __classes = [
+        'BaseModel', 'User', 'State', 'City', 'Amenity', 'Place', 'Review'
+    ]
 
-    classmethod
+    @classmethod
     def setUp(self):
         try:
             os.rename("file.json", "tmp")
@@ -231,7 +237,6 @@ class ConsoleCountTest(unittest.TestCase):
         except IOError:
             pass
 
-    @colorize(color=RED)
     def testCountMissingClass(self):
         """
             count() missing class
@@ -240,7 +245,6 @@ class ConsoleCountTest(unittest.TestCase):
             HBNBCommand().onecmd("count")
             self.assertEqual(output.getvalue(), "** class name missing **\n")
 
-    @colorize(color=RED)
     def testCountInvalidClass(self):
         """
             count() invalid class
@@ -249,59 +253,57 @@ class ConsoleCountTest(unittest.TestCase):
             HBNBCommand().onecmd("count toto")
             self.assertEqual(output.getvalue(), "** class doesn't exist **\n")
 
-    def testCountAmenity(self):
+    def testCountInstanceSpaceNotation(self):
         """
-            count() Amenity
+            count instance command
         """
         self.__testCountObject("Amenity")
 
-    def testCountBaseModel(self):
+    def testCountInstanceDotNotation(self):
+         """
+            count() instance command.
         """
-            count() BaseModel
-        """
-        self.__testCountObject("BaseModel")
+        for className in self.__classes:
+            self.__testCountDotNotation(className)
 
-    def testCountCity(self):
-        """
-            count() City
-        """
-        self.__testCountObject("City")
-
-    def testCountPlace(self):
-        """
-            count() Place
-        """
-        self.__testCountObject("Place")
-
-    def testCountReview(self):
-        """
-            count() Review
-        """
-        self.__testCountObject("Review")
-
-    def testCountState(self):
-        """
-            count() State
-        """
-        self.__testCountObject("State")
-
-    def testCountUser(self):
-        """
-            count() User
-        """
-        self.__testCountObject("User")
-
-    def __testCountObject(self, prmClassName):
+    def __testCountSpaceNotation(self, prmClassName):
         with patch("sys.stdout", new=StringIO()) as output:
-            self.assertFalse(HBNBCommand().onecmd("create {}".format(prmClassName)))
+            self.assertFalse(HBNBCommand().onecmd(
+                "count {}".format(prmClassName)))
+        count = int(output.getvalue())
         with patch("sys.stdout", new=StringIO()) as output:
-            self.assertFalse(HBNBCommand().onecmd("{}.count()".format(prmClassName)))
-            self.assertEqual(output.getvalue().strip(), "1")
+            self.assertFalse(HBNBCommand().onecmd(
+                "create {}".format(prmClassName)))
+        id = output.getvalue()
+        with patch("sys.stdout", new=StringIO()) as output:
+            self.assertFalse(HBNBCommand().onecmd(
+                "count {}".format(prmClassName)))
+            self.assertEqual(output.getvalue().strip(), str(count + 1))
+        with patch("sys.stdout", new=StringIO()) as output:
+            self.assertFalse(HBNBCommand().onecmd(
+                "{}.destroy({})".format(prmClassName, id)))
 
-@colorize(color=BLUE)
+    def __testCountDotNotation(self, prmClassName):
+        with patch("sys.stdout", new=StringIO()) as output:
+            self.assertFalse(HBNBCommand().onecmd(
+                "{}.count()".format(prmClassName)))
+        count = int(output.getvalue())
+            
+            with patch("sys.stdout", new=StringIO()) as output:
+                 self.assertFalse(HBNBCommand().onecmd(
+                "create {}".format(prmClassName)))
+        id = output.getvalue()
+        with patch("sys.stdout", new=StringIO()) as output:
+            self.assertFalse(HBNBCommand().onecmd(
+                "{}.count()".format(prmClassName)))
+            self.assertEqual(output.getvalue().strip(), str(count + 1))
+        with patch("sys.stdout", new=StringIO()) as output:
+            self.assertFalse(HBNBCommand().onecmd(
+                "{}.destroy({})".format(prmClassName, id)))
+
 class ConsoleCreateTest(unittest.TestCase):
 
-    classmethod
+    @classmethod
     def setUp(self):
         try:
             os.rename("file.json", "tmp")
@@ -320,7 +322,7 @@ class ConsoleCreateTest(unittest.TestCase):
         except IOError:
             pass
 
-    @colorize(color=RED)
+
     def testCreateMissingClass(self):
         """
             create() missing class
@@ -328,8 +330,7 @@ class ConsoleCreateTest(unittest.TestCase):
         with patch('sys.stdout', new=StringIO()) as output:
             HBNBCommand().onecmd("create")
             self.assertEqual(output.getvalue(), "** class name missing **\n")
-
-    @colorize(color=RED)
+            
     def testInvalidClass(self):
         """
             create() invalid class
@@ -386,7 +387,6 @@ class ConsoleCreateTest(unittest.TestCase):
             testKey = "{}.{}".format(prmClassName, output.getvalue().strip())
             self.assertIn(testKey, storage.all().keys())
 
-@colorize(color=BLUE)
 class ConsoleDestroyTest(unittest.TestCase):
 
     classmethod
@@ -436,75 +436,44 @@ class ConsoleDestroyTest(unittest.TestCase):
         """
             destroy missing id command
         """
-        self.__missingIdSpaceNotation("Amenity")
-        self.__missingIdSpaceNotation("BaseModel")
-        self.__missingIdSpaceNotation("City")
-        self.__missingIdSpaceNotation("Place")
-        self.__missingIdSpaceNotation("Review")
-        self.__missingIdSpaceNotation("State")
-        self.__missingIdSpaceNotation("User")
+        for className in self.__classes:
+            self.__missingIdSpaceNotation(className)
 
     def testDestroyMissingIdDotNotation(self):
         """
             destroy() missing id command
         """
-        self.__missingIdDotNotation("Amenity")
-        self.__missingIdDotNotation("BaseModel")
-        self.__missingIdDotNotation("City")
-        self.__missingIdDotNotation("Place")
-        self.__missingIdDotNotation("Review")
-        self.__missingIdDotNotation("State")
-        self.__missingIdDotNotation("User")
+        for className in self.__classes:
+            self.__missingIdDotNotation(className)
 
     def testDestroyNoInstanceFoundSpaceNotation(self):
         """
             destroy no instance command
         """
-        self.__noInstanceFoundSpaceNotation("Amenity")
-        self.__noInstanceFoundSpaceNotation("BaseModel")
-        self.__noInstanceFoundSpaceNotation("City")
-        self.__noInstanceFoundSpaceNotation("Place")
-        self.__noInstanceFoundSpaceNotation("Review")
-        self.__noInstanceFoundSpaceNotation("State")
-        self.__noInstanceFoundSpaceNotation("User")
+        for className in self.__classes:
+            self.__noInstanceFoundSpaceNotation(className)
 
     def testDestroyNoInstanceFoundDotNotation(self):
         """
             destroy() no instance command
         """
-        self.__noInstanceFoundDotNotation("Amenity")
-        self.__noInstanceFoundDotNotation("BaseModel")
-        self.__noInstanceFoundDotNotation("City")
-        self.__noInstanceFoundDotNotation("Place")
-        self.__noInstanceFoundDotNotation("Review")
-        self.__noInstanceFoundDotNotation("State")
-        self.__noInstanceFoundDotNotation("User")
+         for className in self.__classes:
+            self.__noInstanceFoundDotNotation(className)
 
     def testDestroyInstanceSpaceNotation(self):
         """
             destroy instance command
         """
-        self.__destroyInstanceSpaceNotation("Amenity")
-        self.__destroyInstanceSpaceNotation("BaseModel")
-        self.__destroyInstanceSpaceNotation("City")
-        self.__destroyInstanceSpaceNotation("Place")
-        self.__destroyInstanceSpaceNotation("Review")
-        self.__destroyInstanceSpaceNotation("State")
-        self.__destroyInstanceSpaceNotation("User")
+         for className in self.__classes:
+            self.__destroyInstanceSpaceNotation(className)
 
     def testDestroyInstanceDotNotation(self):
         """
             destroy() instance command
         """
-        self.__destroyInstanceDotNotation("Amenity")
-        self.__destroyInstanceDotNotation("BaseModel")
-        self.__destroyInstanceDotNotation("City")
-        self.__destroyInstanceDotNotation("Place")
-        self.__destroyInstanceDotNotation("Review")
-        self.__destroyInstanceDotNotation("State")
-        self.__destroyInstanceDotNotation("User")
-
-
+         for className in self.__classes:
+            self.__destroyInstanceDotNotation(className)
+        
 class ConsoleTest(unittest.TestCase):
     def testDoCreate(self):
         pass
