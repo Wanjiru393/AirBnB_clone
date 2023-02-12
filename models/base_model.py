@@ -20,7 +20,7 @@ class BaseModel:
         self.updated_at = datetime.now()
         self.id = str(uuid.uuid4())
 
-         if prmKwArgs:
+        if prmKwArgs:
             for key, value in prmKwArgs.items():
                 if key == "id":
                     continue
